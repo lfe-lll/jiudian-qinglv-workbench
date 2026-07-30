@@ -574,12 +574,13 @@
       color: #fff;
     }
 
-    td[contenteditable="true"] {
+    [contenteditable="true"][data-list] {
       cursor: text;
       outline: none;
+      border-radius: 8px;
     }
 
-    td[contenteditable="true"]:focus {
+    [contenteditable="true"][data-list]:focus {
       background: #fff8bf;
       box-shadow: inset 0 0 0 2px var(--accent);
     }
@@ -988,32 +989,8 @@
         </section>
 
         <section class="section" id="stores">
-          <div class="grid cols-2">
-            <div class="card store-card">
-              <div class="store-head">
-                <div><h3>西工店运营看板</h3><p class="hint">商务客为主，重点关注入住率与线上曝光。</p></div>
-                <span class="tag good">运行正常</span>
-              </div>
-              <div class="store-kpis">
-                <div class="mini-kpi"><b>76%</b><span>今日入住率</span></div>
-                <div class="mini-kpi"><b>¥8,460</b><span>今日营收</span></div>
-                <div class="mini-kpi"><b>4.7</b><span>平台评分</span></div>
-              </div>
-              <div><span class="hint">本月目标完成度</span><div class="progress" style="--w:68%"><i></i></div></div>
-            </div>
-            <div class="card store-card">
-              <div class="store-head">
-                <div><h3>洛龙店运营看板</h3><p class="hint">年轻客群与周末订单较多，重点关注体验评价。</p></div>
-                <span class="tag warn">需关注</span>
-              </div>
-              <div class="store-kpis">
-                <div class="mini-kpi"><b>88%</b><span>今日入住率</span></div>
-                <div class="mini-kpi"><b>¥10,160</b><span>今日营收</span></div>
-                <div class="mini-kpi"><b>4.8</b><span>平台评分</span></div>
-              </div>
-              <div><span class="hint">本月目标完成度</span><div class="progress" style="--w:74%"><i></i></div></div>
-            </div>
-          </div>
+          <p class="hint">门店卡片中的门店名、说明、状态、入住率、营收、评分和目标完成度都可以直接点击修改，离开后自动保存。</p>
+          <div class="grid cols-2" id="storeCards"></div>
           <div class="card" style="margin-top:16px">
             <h3>门店日常记录</h3>
             <form id="addStoreRecordForm" class="quick-form">
@@ -1171,25 +1148,21 @@
           <div class="grid cols-2">
             <div class="card">
               <h3>新增工作日报</h3>
-              <p class="hint">每天晚上把门店、人员、内容和代运营情况写在这里，后面方便复盘。</p>
+              <p class="hint">只保留最常用的三项：今天做了什么、接下来安排什么、还有什么问题没解决。</p>
               <form id="addDailyReportForm">
-                <div class="form-grid">
-                  <label>日期<input id="reportDate" type="date"></label>
-                  <label>汇报人<input id="reportOwner" placeholder="例如：我 / 西工店店长"></label>
-                  <label>今日重点<input id="reportFocus" placeholder="例如：客诉处理、房价调整、视频拍摄"></label>
-                  <label>明日计划<input id="reportTomorrow" placeholder="例如：回访客户、检查卫生、跟进房源"></label>
-                </div>
-                <label style="margin-top:12px">今日完成<textarea id="reportDone" placeholder="今天完成了哪些事情"></textarea></label>
-                <label style="margin-top:12px">问题与需要协调<textarea id="reportProblem" placeholder="遇到的问题、需要老板决策或协调的事项"></textarea></label>
+                <label>日期<input id="reportDate" type="date"></label>
+                <label style="margin-top:12px">今日工作<textarea id="reportWork" placeholder="例如：跟进客诉、查看入住率、调整房价、拍摄内容"></textarea></label>
+                <label style="margin-top:12px">工作安排<textarea id="reportPlan" placeholder="例如：明天要检查卫生、回访客户、发布视频"></textarea></label>
+                <label style="margin-top:12px">遗留问题<textarea id="reportIssue" placeholder="例如：维修未报价、差评待回访、人员排班未确认"></textarea></label>
                 <button class="btn" type="submit" style="margin-top:12px">保存日报</button>
               </form>
             </div>
             <div class="card">
               <h3>日报使用建议</h3>
               <div class="task-list">
-                <div class="task"><span class="tag good">门店</span><span><b class="task-title">记录入住、营收、客诉、维修</b><span class="task-meta">每天固定看异常和未闭环事项</span></span><span></span></div>
-                <div class="task"><span class="tag">内容</span><span><b class="task-title">记录拍摄、剪辑、发布、数据复盘</b><span class="task-meta">方便你持续做探店内容</span></span><span></span></div>
-                <div class="task"><span class="tag warn">明日</span><span><b class="task-title">写清楚明天最重要的 1-3 件事</b><span class="task-meta">第二天打开工作台就知道先做什么</span></span><span></span></div>
+                <div class="task"><span class="tag good">今日</span><span><b class="task-title">写清今天实际完成的工作</b><span class="task-meta">门店、内容、人员、代运营都可以合并写</span></span><span></span></div>
+                <div class="task"><span class="tag">安排</span><span><b class="task-title">写明接下来要做的工作</b><span class="task-meta">第二天打开工作台就知道先做什么</span></span><span></span></div>
+                <div class="task"><span class="tag warn">遗留</span><span><b class="task-title">只记录没解决的问题</b><span class="task-meta">方便持续跟进和复盘</span></span><span></span></div>
               </div>
             </div>
           </div>
@@ -1198,7 +1171,7 @@
             <p class="hint">表格内容可直接点击修改，离开单元格后自动保存。</p>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>日期</th><th>汇报人</th><th>今日重点</th><th>今日完成</th><th>问题与协调</th><th>明日计划</th><th>操作</th></tr></thead>
+                <thead><tr><th>日期</th><th>今日工作</th><th>工作安排</th><th>遗留问题</th><th>操作</th></tr></thead>
                 <tbody id="dailyReportsBody"></tbody>
               </table>
             </div>
