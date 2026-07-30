@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hotel-workbench-v1';
+const CACHE_NAME = 'hotel-workbench-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -23,7 +23,17 @@ self.addEventListener('install', function(e) {
 });
 
 self.addEventListener('activate', function(e) {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil(
+    caches.keys().then(function(names) {
+      return Promise.all(names.filter(function(n) {
+        return n !== CACHE_NAME;
+      }).map(function(n) {
+        return caches.delete(n);
+      }));
+    }).then(function() {
+      return self.clients.claim();
+    })
+  );
 });
 
 self.addEventListener('fetch', function(e) {
