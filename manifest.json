@@ -1,20 +1,20 @@
 {
-  "name": "酒店与青旅经营工作台",
-  "short_name": "经营工作台",
-  "description": "酒店、青旅、内容视频、代运营管理工具",
+  "name": "小新经营工作台",
+  "short_name": "小新工作台",
+  "description": "蜡笔小新风格 - 酒店、青旅、内容视频、代运营管理工具",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f6f3ee",
-  "theme_color": "#8a4f2a",
+  "background_color": "#FFF9E6",
+  "theme_color": "#F4471F",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%238a4f2a'/%3E%3Ctext x='96' y='120' font-size='96' text-anchor='middle' fill='%23fffaf1' font-family='system-ui'%3E旅%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%23F4471F'/%3E%3Cellipse cx='96' cy='104' rx='60' ry='64' fill='%23FFD9B3'/%3E%3Cpath d='M 36 80 Q 40 28 96 16 Q 152 28 156 80 Q 144 56 128 56 Q 112 36 98 42 Q 88 24 78 42 Q 64 36 48 56 Q 32 56 36 80 Z' fill='%232D2D2D'/%3E%3Cpath d='M 56 80 Q 68 72 80 80' fill='none' stroke='%232D2D2D' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M 112 80 Q 124 72 136 80' fill='none' stroke='%232D2D2D' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='68' cy='92' r='4' fill='%232D2D2D'/%3E%3Ccircle cx='124' cy='92' r='4' fill='%232D2D2D'/%3E%3Cellipse cx='50' cy='108' rx='10' ry='6' fill='%23FF6B6B' opacity='0.55'/%3E%3Cellipse cx='142' cy='108' rx='10' ry='6' fill='%23FF6B6B' opacity='0.55'/%3E%3Cpath d='M 78 124 Q 96 136 114 124' fill='none' stroke='%232D2D2D' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E",
       "sizes": "192x192",
       "type": "image/svg+xml"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%238a4f2a'/%3E%3Ctext x='256' y='340' font-size='280' text-anchor='middle' fill='%23fffaf1' font-family='system-ui'%3E旅%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%23F4471F'/%3E%3Cellipse cx='96' cy='104' rx='60' ry='64' fill='%23FFD9B3'/%3E%3Cpath d='M 36 80 Q 40 28 96 16 Q 152 28 156 80 Q 144 56 128 56 Q 112 36 98 42 Q 88 24 78 42 Q 64 36 48 56 Q 32 56 36 80 Z' fill='%232D2D2D'/%3E%3Cpath d='M 56 80 Q 68 72 80 80' fill='none' stroke='%232D2D2D' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M 112 80 Q 124 72 136 80' fill='none' stroke='%232D2D2D' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='68' cy='92' r='4' fill='%232D2D2D'/%3E%3Ccircle cx='124' cy='92' r='4' fill='%232D2D2D'/%3E%3Cellipse cx='50' cy='108' rx='10' ry='6' fill='%23FF6B6B' opacity='0.55'/%3E%3Cellipse cx='142' cy='108' rx='10' ry='6' fill='%23FF6B6B' opacity='0.55'/%3E%3Cpath d='M 78 124 Q 96 136 114 124' fill='none' stroke='%232D2D2D' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml"
     }
