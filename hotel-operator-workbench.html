@@ -531,6 +531,59 @@
       gap: 12px;
     }
 
+
+
+    .quick-form {
+      margin: 0 0 16px;
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--soft);
+      border: 2px dashed var(--ink);
+    }
+
+    .quick-form h4 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 15px;
+    }
+
+    .table-actions {
+      min-width: 86px;
+      white-space: nowrap;
+    }
+
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      margin: 2px;
+      padding: 4px 8px;
+      border-radius: 10px;
+      border: 2px solid var(--ink);
+      background: var(--bg2);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    .mini-btn.danger {
+      background: var(--bad);
+      color: #fff;
+    }
+
+    td[contenteditable="true"] {
+      cursor: text;
+      outline: none;
+    }
+
+    td[contenteditable="true"]:focus {
+      background: #fff8bf;
+      box-shadow: inset 0 0 0 2px var(--accent);
+    }
+
     label {
       display: grid;
       gap: 6px;
@@ -846,6 +899,7 @@
       </div>
       <nav class="nav" aria-label="工作台导航">
         <button class="active" data-section="dashboard">首页总览 <span class="count">8</span></button>
+        <button data-section="reports">工作日报 <span class="count">+</span></button>
         <button data-section="stores">门店运营 <span class="count">2</span></button>
         <button data-section="people">人员管理 <span class="count">5</span></button>
         <button data-section="expansion">青旅拓店 <span class="count">4</span></button>
@@ -962,9 +1016,21 @@
           </div>
           <div class="card" style="margin-top:16px">
             <h3>门店日常记录</h3>
+            <form id="addStoreRecordForm" class="quick-form">
+              <h4>新增门店记录</h4>
+              <div class="form-grid">
+                <label>门店<select id="storeRecordStore"><option>西工店</option><option>洛龙店</option><option>其他</option></select></label>
+                <label>事项<input id="storeRecordItem" placeholder="例如：空调维修 / 差评处理"></label>
+                <label>负责人<input id="storeRecordOwner" placeholder="例如：店长 / 保洁主管"></label>
+                <label>状态<select id="storeRecordStatus"><option>待确认</option><option>处理中</option><option>需回访</option><option>已完成</option></select></label>
+              </div>
+              <label style="margin-top:12px">处理建议<textarea id="storeRecordAdvice" placeholder="写下处理要求、截止时间或复盘结论"></textarea></label>
+              <button class="btn" type="submit" style="margin-top:12px">保存门店记录</button>
+            </form>
+            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存。</p>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>门店</th><th>事项</th><th>负责人</th><th>状态</th><th>处理建议</th></tr></thead>
+                <thead><tr><th>门店</th><th>事项</th><th>负责人</th><th>状态</th><th>处理建议</th><th>操作</th></tr></thead>
                 <tbody id="storeRecordsBody"></tbody>
               </table>
             </div>
@@ -1048,9 +1114,21 @@
           </div>
           <div class="card" style="margin-top:16px">
             <h3>内容数据记录</h3>
+            <form id="addContentVideoForm" class="quick-form">
+              <h4>新增内容记录</h4>
+              <div class="form-grid">
+                <label>标题<input id="contentVideoTitle" placeholder="例如：洛阳夜市小吃合集"></label>
+                <label>平台<input id="contentVideoPlatform" placeholder="例如：抖音 / 小红书"></label>
+                <label>播放量<input id="contentVideoPlay" placeholder="例如：12,000 / 待发布"></label>
+                <label>互动数据<input id="contentVideoInteract" placeholder="例如：点赞 860 / 收藏 580"></label>
+              </div>
+              <label style="margin-top:12px">复盘<textarea id="contentVideoReview" placeholder="写下标题、封面、发布时间、转化等复盘"></textarea></label>
+              <button class="btn" type="submit" style="margin-top:12px">保存内容记录</button>
+            </form>
+            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存。</p>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>标题</th><th>平台</th><th>播放</th><th>互动</th><th>复盘</th></tr></thead>
+                <thead><tr><th>标题</th><th>平台</th><th>播放</th><th>互动</th><th>复盘</th><th>操作</th></tr></thead>
                 <tbody id="contentVideosBody"></tbody>
               </table>
             </div>
@@ -1085,6 +1163,44 @@
               <div class="template-card"><b>青旅拓店清单</b><p>选址、房源、测算、合同、装修、开业。</p></div>
               <div class="template-card"><b>代运营月报</b><p>数据变化、问题复盘、下月动作、客户建议。</p></div>
               <div class="template-card"><b>视频脚本模板</b><p>开头钩子、体验过程、推荐理由、结尾互动。</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="reports">
+          <div class="grid cols-2">
+            <div class="card">
+              <h3>新增工作日报</h3>
+              <p class="hint">每天晚上把门店、人员、内容和代运营情况写在这里，后面方便复盘。</p>
+              <form id="addDailyReportForm">
+                <div class="form-grid">
+                  <label>日期<input id="reportDate" type="date"></label>
+                  <label>汇报人<input id="reportOwner" placeholder="例如：我 / 西工店店长"></label>
+                  <label>今日重点<input id="reportFocus" placeholder="例如：客诉处理、房价调整、视频拍摄"></label>
+                  <label>明日计划<input id="reportTomorrow" placeholder="例如：回访客户、检查卫生、跟进房源"></label>
+                </div>
+                <label style="margin-top:12px">今日完成<textarea id="reportDone" placeholder="今天完成了哪些事情"></textarea></label>
+                <label style="margin-top:12px">问题与需要协调<textarea id="reportProblem" placeholder="遇到的问题、需要老板决策或协调的事项"></textarea></label>
+                <button class="btn" type="submit" style="margin-top:12px">保存日报</button>
+              </form>
+            </div>
+            <div class="card">
+              <h3>日报使用建议</h3>
+              <div class="task-list">
+                <div class="task"><span class="tag good">门店</span><span><b class="task-title">记录入住、营收、客诉、维修</b><span class="task-meta">每天固定看异常和未闭环事项</span></span><span></span></div>
+                <div class="task"><span class="tag">内容</span><span><b class="task-title">记录拍摄、剪辑、发布、数据复盘</b><span class="task-meta">方便你持续做探店内容</span></span><span></span></div>
+                <div class="task"><span class="tag warn">明日</span><span><b class="task-title">写清楚明天最重要的 1-3 件事</b><span class="task-meta">第二天打开工作台就知道先做什么</span></span><span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <h3>工作日报记录</h3>
+            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存。</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>日期</th><th>汇报人</th><th>今日重点</th><th>今日完成</th><th>问题与协调</th><th>明日计划</th><th>操作</th></tr></thead>
+                <tbody id="dailyReportsBody"></tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -1132,13 +1248,13 @@
         <span class="icon">&#127978;</span>
         <span>门店</span>
       </button>
-      <button data-section="people">
-        <span class="icon">&#128101;</span>
-        <span>人员</span>
-      </button>
       <button data-section="content">
         <span class="icon">&#127909;</span>
         <span>内容</span>
+      </button>
+      <button data-section="reports">
+        <span class="icon">&#128221;</span>
+        <span>日报</span>
       </button>
       <button data-section="settings">
         <span class="icon">&#9881;</span>
@@ -1153,7 +1269,7 @@
   <script>
     // 注册 Service Worker（支持离线访问）
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(function() {
+      navigator.serviceWorker.register('./sw.js?v=4').then(function(reg) { if (reg && reg.update) reg.update(); }).catch(function() {
         // 本地文件模式下可能注册失败，静默处理
       });
     }
