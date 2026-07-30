@@ -63,6 +63,10 @@
         { tag: '数据', tagClass: 'warn', title: '西工店连续两天入住率低于 70%', meta: '建议检查平台价格和曝光' },
         { tag: '内容', tagClass: '', title: '本周探店视频还差 1 条未拍', meta: '可安排在周五晚高峰拍摄' }
       ],
+      storeKpis: [
+        { name: '西工店', desc: '商务客为主，重点关注入住率与线上曝光。', status: '运行正常', statusClass: 'good', occupancy: '76%', revenue: '¥8,460', rating: '4.7', progress: '68%' },
+        { name: '洛龙店', desc: '年轻客群与周末订单较多，重点关注体验评价。', status: '需关注', statusClass: 'warn', occupancy: '88%', revenue: '¥10,160', rating: '4.8', progress: '74%' }
+      ],
       storeRecords: [
         { store: '西工店', item: '空调异响维修', owner: '店长', status: '处理中', statusClass: 'warn', advice: '要求维修师傅今天反馈报价与完成时间。' },
         { store: '洛龙店', item: '301 房卫生反馈', owner: '保洁主管', status: '需回访', statusClass: 'bad', advice: '复查卫生标准，处理后给客人致歉并回访。' },
@@ -80,12 +84,13 @@
         { name: 'C 商务酒店', focus: '差评处理与服务流程', problem: '前台响应慢', action: '制定前台话术和客诉 SOP', freq: '每周一次' }
       ],
       dailyReports: [
-        { date: new Date().toISOString().slice(0, 10), owner: '我', focus: '双门店经营复盘', done: '查看入住率、跟进门店异常、整理今日待办。', problem: '暂无', tomorrow: '继续跟进客诉和内容拍摄计划。' }
+        { date: new Date().toISOString().slice(0, 10), work: '查看入住率、跟进门店异常、整理今日待办。', plan: '继续跟进客诉和内容拍摄计划。', issue: '暂无' }
       ]
     };
   }
 
   var appData = loadData() || getDefaultData();
+  migrateData();
 
   // ===== 导航（桌面和手机统一点击逻辑） =====
   function initNavigation() {
@@ -389,10 +394,53 @@
   }
 
   function statusClass(status) {
+    if (status === '运行正常') return 'good';
+    if (status === '需关注') return 'warn';
     if (status === '已完成') return 'good';
     if (status === '处理中' || status === '待确认') return 'warn';
     if (status === '需回访') return 'bad';
     return '';
+  }
+
+  function migrateData() {
+    var defaults = getDefaultData();
+    if (!appData.storeKpis) appData.storeKpis = defaults.storeKpis;
+    appData.dailyReports = (appData.dailyReports || defaults.dailyReports).map(function(r) {
+      return {
+        date: r.date || new Date().toISOString().slice(0, 10),
+        work: r.work || r.done || r.focus || '',
+        plan: r.plan || r.tomorrow || '',
+        issue: r.issue || r.problem || ''
+      };
+    });
+    saveData(appData);
+  }
+
+  function editableField(list, index, field, value, tagName, className) {
+    var tag = tagName || 'span';
+    return '<' + tag + ' contenteditable="true" data-list="' + list + '" data-index="' + index + '" data-field="' + field + '"' +
+      (className ? ' class="' + className + '"' : '') + '>' + escapeHtml(value || '') + '</' + tag + '>';
+  }
+
+  function renderStoreCards() {
+    var container = $('#storeCards');
+    if (!container) return;
+    appData.storeKpis = appData.storeKpis || getDefaultData().storeKpis;
+    container.innerHTML = appData.storeKpis.map(function(s, index) {
+      var cls = s.statusClass || statusClass(s.status) || '';
+      return '<div class="card store-card">' +
+        '<div class="store-head">' +
+          '<div>' + editableField('storeKpis', index, 'name', s.name, 'h3') + editableField('storeKpis', index, 'desc', s.desc, 'p', 'hint') + '</div>' +
+          editableField('storeKpis', index, 'status', s.status, 'span', 'tag ' + cls) +
+        '</div>' +
+        '<div class="store-kpis">' +
+          '<div class="mini-kpi">' + editableField('storeKpis', index, 'occupancy', s.occupancy, 'b') + '<span>今日入住率</span></div>' +
+          '<div class="mini-kpi">' + editableField('storeKpis', index, 'revenue', s.revenue, 'b') + '<span>今日营收</span></div>' +
+          '<div class="mini-kpi">' + editableField('storeKpis', index, 'rating', s.rating, 'b') + '<span>平台评分</span></div>' +
+        '</div>' +
+        '<div><span class="hint">本月目标完成度：' + editableField('storeKpis', index, 'progress', s.progress, 'b') + '</span><div class="progress" style="--w:' + escapeHtml(s.progress || '0%') + '"><i></i></div></div>' +
+      '</div>';
+    }).join('');
   }
 
   // ===== 门店记录表格渲染 =====
@@ -435,11 +483,9 @@
     tbody.innerHTML = appData.dailyReports.map(function(r, index) {
       return '<tr>' +
         editableCell('dailyReports', index, 'date', r.date) +
-        editableCell('dailyReports', index, 'owner', r.owner) +
-        editableCell('dailyReports', index, 'focus', r.focus) +
-        editableCell('dailyReports', index, 'done', r.done) +
-        editableCell('dailyReports', index, 'problem', r.problem) +
-        editableCell('dailyReports', index, 'tomorrow', r.tomorrow) +
+        editableCell('dailyReports', index, 'work', r.work || r.done || r.focus) +
+        editableCell('dailyReports', index, 'plan', r.plan || r.tomorrow) +
+        editableCell('dailyReports', index, 'issue', r.issue || r.problem) +
         '<td class="table-actions"><button class="mini-btn danger" data-delete-list="dailyReports" data-delete-index="' + index + '">删除</button></td>' +
       '</tr>';
     }).join('');
@@ -447,7 +493,7 @@
 
   function bindEditableTables() {
     document.addEventListener('blur', function(e) {
-      var cell = e.target.closest('td[contenteditable="true"]');
+      var cell = e.target.closest('[contenteditable="true"][data-list]');
       if (!cell) return;
       var list = cell.getAttribute('data-list');
       var index = parseInt(cell.getAttribute('data-index'), 10);
@@ -456,6 +502,13 @@
         appData[list][index][field] = cell.textContent.trim();
         if (list === 'storeRecords' && field === 'status') {
           appData[list][index].statusClass = statusClass(appData[list][index][field]);
+        }
+        if (list === 'storeKpis' && field === 'status') {
+          appData[list][index].statusClass = statusClass(appData[list][index][field]);
+          renderStoreCards();
+        }
+        if (list === 'storeKpis' && field === 'progress') {
+          renderStoreCards();
         }
         saveData(appData);
         showToast('已自动保存');
@@ -476,6 +529,7 @@
   }
 
   function renderAllEditable() {
+    renderStoreCards();
     renderStoreRecords();
     renderContentVideos();
     renderDailyReports();
@@ -533,11 +587,9 @@
         appData.dailyReports = appData.dailyReports || [];
         appData.dailyReports.unshift({
           date: $('#reportDate').value || new Date().toISOString().slice(0, 10),
-          owner: $('#reportOwner').value.trim() || '我',
-          focus: $('#reportFocus').value.trim(),
-          done: $('#reportDone').value.trim(),
-          problem: $('#reportProblem').value.trim(),
-          tomorrow: $('#reportTomorrow').value.trim()
+          work: $('#reportWork').value.trim(),
+          plan: $('#reportPlan').value.trim(),
+          issue: $('#reportIssue').value.trim()
         });
         saveData(appData);
         renderDailyReports();
@@ -593,6 +645,7 @@
   renderTasks();
   initTaskForm();
   initButtons();
+  renderStoreCards();
   renderStoreRecords();
   renderContentVideos();
   renderDailyReports();
