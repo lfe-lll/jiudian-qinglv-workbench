@@ -974,6 +974,7 @@
         <button data-section="agency">代运营 <span class="count">3</span></button>
         <button data-section="library">资料库 <span class="count">9</span></button>
         <button data-section="monthly">月度复盘 <span class="count">新</span></button>
+        <button data-section="learning">学习成长 <span class="count">新</span></button>
         <button data-section="settings">录入模板 <span class="count">+</span></button>
       </nav>
       <div class="side-note">
@@ -1291,6 +1292,45 @@
           </div>
         </section>
 
+
+        <section class="section" id="learning">
+          <div class="grid cols-2">
+            <div class="card">
+              <h3>新增学习记录</h3>
+              <p class="hint">记录今天学了什么，以及这个月读了什么书，方便长期积累。</p>
+              <form id="addLearningForm">
+                <div class="form-grid">
+                  <label>日期<input id="learningDate" type="date"></label>
+                  <label>本月读的书<input id="learningBook" placeholder="例如：《定位》/《认知觉醒》"></label>
+                </div>
+                <label style="margin-top:12px">今日学习内容<textarea id="learningContent" placeholder="例如：学习酒店平台运营、短视频选题、财务模型、管理方法"></textarea></label>
+                <label style="margin-top:12px">学习收获 / 备注<textarea id="learningNote" placeholder="例如：今天学到的一个方法，准备怎么用到门店经营里"></textarea></label>
+                <button class="btn" type="submit" style="margin-top:12px">保存学习记录</button>
+              </form>
+            </div>
+            <div class="card">
+              <h3>本月学习摘要</h3>
+              <div class="review-box" id="learningSummary">保存学习记录后自动汇总。</div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <h3>学习记录</h3>
+            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存；手机端点击单元格会弹出编辑框。</p>
+            <div class="filter-bar">
+              <label>关键词<input id="learningFilterKeyword" placeholder="搜索学习内容/书名"></label>
+              <label>月份<input id="learningFilterMonth" type="month"></label>
+              <label>书名<input id="learningFilterBook" placeholder="按书名筛选"></label>
+              <label>只看有备注<select id="learningFilterNote"><option value="">全部</option><option value="yes">有备注</option></select></label>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>日期</th><th>今日学习内容</th><th>本月读的书</th><th>学习收获 / 备注</th><th>操作</th></tr></thead>
+                <tbody id="learningRecordsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="section" id="settings">
           <div class="grid cols-2">
             <div class="card">
@@ -1298,7 +1338,7 @@
               <form id="addTaskForm">
                 <div class="form-grid">
                   <label>事项名称<input id="taskTitle" placeholder="例如：回复洛龙店差评"></label>
-                  <label>所属模块<select id="taskModule"><option>门店运营</option><option>人员管理</option><option>青旅拓店</option><option>内容视频</option><option>代运营</option></select></label>
+                  <label>所属模块<select id="taskModule"><option>门店运营</option><option>人员管理</option><option>青旅拓店</option><option>内容视频</option><option>代运营</option><option>学习成长</option></select></label>
                   <label>负责人<input id="taskOwner" placeholder="例如：西工店店长"></label>
                   <label>优先级<select id="taskPriority"><option>普通</option><option>跟进</option><option>紧急</option></select></label>
                   <label>截止日期<input id="taskDue" type="date"></label>
@@ -1362,6 +1402,10 @@
         <span class="icon">&#128221;</span>
         <span>日报</span>
       </button>
+      <button data-section="learning">
+        <span class="icon">&#128218;</span>
+        <span>学习</span>
+      </button>
       <button data-section="settings">
         <span class="icon">&#9881;</span>
         <span>更多</span>
@@ -1387,7 +1431,7 @@
   <script>
     // 注册 Service Worker（支持离线访问）
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js?v=6').then(function(reg) { if (reg && reg.update) reg.update(); }).catch(function() {
+      navigator.serviceWorker.register('./sw.js?v=7').then(function(reg) { if (reg && reg.update) reg.update(); }).catch(function() {
         // 本地文件模式下可能注册失败，静默处理
       });
     }
