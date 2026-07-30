@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hotel-workbench-v5';
+const CACHE_NAME = 'hotel-workbench-v6';
 const ASSETS = [
   './',
   './index.html',
