@@ -78,27 +78,31 @@
         { name: 'A 精品酒店', focus: '价格体系与平台曝光', problem: '周中入住率低', action: '调整平日促销与连住策略', freq: '每周一次' },
         { name: 'B 民宿酒店', focus: '评价维护与房型包装', problem: '图片转化低', action: '重拍房型主图，优化标题', freq: '每两周一次' },
         { name: 'C 商务酒店', focus: '差评处理与服务流程', problem: '前台响应慢', action: '制定前台话术和客诉 SOP', freq: '每周一次' }
+      ],
+      dailyReports: [
+        { date: new Date().toISOString().slice(0, 10), owner: '我', focus: '双门店经营复盘', done: '查看入住率、跟进门店异常、整理今日待办。', problem: '暂无', tomorrow: '继续跟进客诉和内容拍摄计划。' }
       ]
     };
   }
 
   var appData = loadData() || getDefaultData();
 
-  // ===== 导航 =====
+  // ===== 导航（桌面和手机统一点击逻辑） =====
   function initNavigation() {
-    var buttons = $all('.nav button[data-section]');
-    var sections = $all('.section');
-    buttons.forEach(function(button) {
-      button.addEventListener('click', function() {
-        var target = button.getAttribute('data-section');
-        buttons.forEach(function(item) { item.classList.remove('active'); });
-        sections.forEach(function(section) { section.classList.remove('active'); });
-        button.classList.add('active');
-        var targetSection = $('#' + target);
-        if (targetSection) targetSection.classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(resizeCharts, 80);
+    document.addEventListener('click', function(e) {
+      var button = e.target.closest('button[data-section]');
+      if (!button) return;
+      var target = button.getAttribute('data-section');
+      var targetSection = document.getElementById(target);
+      if (!targetSection) return;
+      e.preventDefault();
+      $all('button[data-section]').forEach(function(item) {
+        item.classList.toggle('active', item.getAttribute('data-section') === target);
       });
+      $all('.section').forEach(function(section) { section.classList.remove('active'); });
+      targetSection.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(resizeCharts, 80);
     });
   }
 
@@ -380,17 +384,29 @@
     });
   }
 
+  function editableCell(list, index, field, value) {
+    return '<td contenteditable="true" data-list="' + list + '" data-index="' + index + '" data-field="' + field + '">' + escapeHtml(value || '') + '</td>';
+  }
+
+  function statusClass(status) {
+    if (status === '已完成') return 'good';
+    if (status === '处理中' || status === '待确认') return 'warn';
+    if (status === '需回访') return 'bad';
+    return '';
+  }
+
   // ===== 门店记录表格渲染 =====
   function renderStoreRecords() {
     var tbody = $('#storeRecordsBody');
     if (!tbody) return;
-    tbody.innerHTML = appData.storeRecords.map(function(r) {
+    tbody.innerHTML = appData.storeRecords.map(function(r, index) {
       return '<tr>' +
-        '<td>' + escapeHtml(r.store) + '</td>' +
-        '<td>' + escapeHtml(r.item) + '</td>' +
-        '<td>' + escapeHtml(r.owner) + '</td>' +
-        '<td><span class="tag ' + r.statusClass + '">' + escapeHtml(r.status) + '</span></td>' +
-        '<td>' + escapeHtml(r.advice) + '</td>' +
+        editableCell('storeRecords', index, 'store', r.store) +
+        editableCell('storeRecords', index, 'item', r.item) +
+        editableCell('storeRecords', index, 'owner', r.owner) +
+        editableCell('storeRecords', index, 'status', r.status) +
+        editableCell('storeRecords', index, 'advice', r.advice) +
+        '<td class="table-actions"><button class="mini-btn danger" data-delete-list="storeRecords" data-delete-index="' + index + '">删除</button></td>' +
       '</tr>';
     }).join('');
   }
@@ -399,15 +415,137 @@
   function renderContentVideos() {
     var tbody = $('#contentVideosBody');
     if (!tbody) return;
-    tbody.innerHTML = appData.contentVideos.map(function(v) {
+    tbody.innerHTML = appData.contentVideos.map(function(v, index) {
       return '<tr>' +
-        '<td>' + escapeHtml(v.title) + '</td>' +
-        '<td>' + escapeHtml(v.platform) + '</td>' +
-        '<td>' + escapeHtml(v.play) + '</td>' +
-        '<td>' + escapeHtml(v.interact) + '</td>' +
-        '<td>' + escapeHtml(v.review) + '</td>' +
+        editableCell('contentVideos', index, 'title', v.title) +
+        editableCell('contentVideos', index, 'platform', v.platform) +
+        editableCell('contentVideos', index, 'play', v.play) +
+        editableCell('contentVideos', index, 'interact', v.interact) +
+        editableCell('contentVideos', index, 'review', v.review) +
+        '<td class="table-actions"><button class="mini-btn danger" data-delete-list="contentVideos" data-delete-index="' + index + '">删除</button></td>' +
       '</tr>';
     }).join('');
+  }
+
+  // ===== 工作日报渲染 =====
+  function renderDailyReports() {
+    var tbody = $('#dailyReportsBody');
+    if (!tbody) return;
+    appData.dailyReports = appData.dailyReports || [];
+    tbody.innerHTML = appData.dailyReports.map(function(r, index) {
+      return '<tr>' +
+        editableCell('dailyReports', index, 'date', r.date) +
+        editableCell('dailyReports', index, 'owner', r.owner) +
+        editableCell('dailyReports', index, 'focus', r.focus) +
+        editableCell('dailyReports', index, 'done', r.done) +
+        editableCell('dailyReports', index, 'problem', r.problem) +
+        editableCell('dailyReports', index, 'tomorrow', r.tomorrow) +
+        '<td class="table-actions"><button class="mini-btn danger" data-delete-list="dailyReports" data-delete-index="' + index + '">删除</button></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function bindEditableTables() {
+    document.addEventListener('blur', function(e) {
+      var cell = e.target.closest('td[contenteditable="true"]');
+      if (!cell) return;
+      var list = cell.getAttribute('data-list');
+      var index = parseInt(cell.getAttribute('data-index'), 10);
+      var field = cell.getAttribute('data-field');
+      if (appData[list] && appData[list][index]) {
+        appData[list][index][field] = cell.textContent.trim();
+        if (list === 'storeRecords' && field === 'status') {
+          appData[list][index].statusClass = statusClass(appData[list][index][field]);
+        }
+        saveData(appData);
+        showToast('已自动保存');
+      }
+    }, true);
+
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-delete-list]');
+      if (!btn) return;
+      var list = btn.getAttribute('data-delete-list');
+      var index = parseInt(btn.getAttribute('data-delete-index'), 10);
+      if (!appData[list]) return;
+      appData[list].splice(index, 1);
+      saveData(appData);
+      renderAllEditable();
+      showToast('已删除');
+    });
+  }
+
+  function renderAllEditable() {
+    renderStoreRecords();
+    renderContentVideos();
+    renderDailyReports();
+  }
+
+  function initRecordForms() {
+    var storeForm = $('#addStoreRecordForm');
+    if (storeForm) {
+      storeForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var item = $('#storeRecordItem').value.trim();
+        if (!item) return showToast('请输入门店事项');
+        var status = $('#storeRecordStatus').value;
+        appData.storeRecords.push({
+          store: $('#storeRecordStore').value,
+          item: item,
+          owner: $('#storeRecordOwner').value.trim() || '待定',
+          status: status,
+          statusClass: statusClass(status),
+          advice: $('#storeRecordAdvice').value.trim()
+        });
+        saveData(appData);
+        renderStoreRecords();
+        storeForm.reset();
+        showToast('门店记录已保存');
+      });
+    }
+
+    var contentForm = $('#addContentVideoForm');
+    if (contentForm) {
+      contentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var title = $('#contentVideoTitle').value.trim();
+        if (!title) return showToast('请输入内容标题');
+        appData.contentVideos.push({
+          title: title,
+          platform: $('#contentVideoPlatform').value.trim() || '-',
+          play: $('#contentVideoPlay').value.trim() || '-',
+          interact: $('#contentVideoInteract').value.trim() || '-',
+          review: $('#contentVideoReview').value.trim()
+        });
+        saveData(appData);
+        renderContentVideos();
+        contentForm.reset();
+        showToast('内容记录已保存');
+      });
+    }
+
+    var reportDate = $('#reportDate');
+    if (reportDate && !reportDate.value) reportDate.value = new Date().toISOString().slice(0, 10);
+    var reportForm = $('#addDailyReportForm');
+    if (reportForm) {
+      reportForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        appData.dailyReports = appData.dailyReports || [];
+        appData.dailyReports.unshift({
+          date: $('#reportDate').value || new Date().toISOString().slice(0, 10),
+          owner: $('#reportOwner').value.trim() || '我',
+          focus: $('#reportFocus').value.trim(),
+          done: $('#reportDone').value.trim(),
+          problem: $('#reportProblem').value.trim(),
+          tomorrow: $('#reportTomorrow').value.trim()
+        });
+        saveData(appData);
+        renderDailyReports();
+        reportForm.reset();
+        if (reportDate) reportDate.value = new Date().toISOString().slice(0, 10);
+        showToast('工作日报已保存');
+      });
+    }
   }
 
   // ===== 代运营客户渲染 =====
@@ -457,7 +595,10 @@
   initButtons();
   renderStoreRecords();
   renderContentVideos();
+  renderDailyReports();
   renderAgencyClients();
+  bindEditableTables();
+  initRecordForms();
   initExport();
   initRevenueChart();
   initTaskChart();
