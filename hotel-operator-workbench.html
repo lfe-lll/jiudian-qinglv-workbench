@@ -734,6 +734,72 @@
     .template-card b { display: block; margin-bottom: 6px; color: var(--accent); }
     .template-card p { margin: 0; color: var(--muted); font-size: 13px; }
 
+
+    .filter-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 14px;
+      padding: 12px;
+      border-radius: 18px;
+      background: var(--soft);
+      border: 2px dashed var(--ink);
+    }
+
+    .task.overdue {
+      background: #FFE3E6;
+      border-color: var(--bad);
+    }
+
+    .task .due {
+      display: block;
+      margin-top: 4px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(45, 45, 45, 0.45);
+    }
+
+    .modal-mask.show { display: flex; }
+
+    .edit-modal {
+      width: min(560px, 100%);
+      padding: 18px;
+      border-radius: 22px;
+      background: var(--card);
+      border: 3px solid var(--ink);
+      box-shadow: 6px 6px 0 var(--accent);
+    }
+
+    .edit-modal h3 { margin: 0 0 10px; }
+    .edit-modal textarea { min-height: 150px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+
+    .cloud-status {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .review-box {
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--soft);
+      border: 2px solid var(--ink);
+      white-space: pre-wrap;
+    }
+
     .toast {
       position: fixed;
       right: 22px;
@@ -907,6 +973,7 @@
         <button data-section="content">内容视频 <span class="count">6</span></button>
         <button data-section="agency">代运营 <span class="count">3</span></button>
         <button data-section="library">资料库 <span class="count">9</span></button>
+        <button data-section="monthly">月度复盘 <span class="count">新</span></button>
         <button data-section="settings">录入模板 <span class="count">+</span></button>
       </nav>
       <div class="side-note">
@@ -1004,7 +1071,13 @@
               <label style="margin-top:12px">处理建议<textarea id="storeRecordAdvice" placeholder="写下处理要求、截止时间或复盘结论"></textarea></label>
               <button class="btn" type="submit" style="margin-top:12px">保存门店记录</button>
             </form>
-            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存。</p>
+            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存；手机端点击单元格会弹出编辑框。</p>
+            <div class="filter-bar">
+              <label>关键词<input id="storeFilterKeyword" placeholder="搜索事项/建议"></label>
+              <label>门店<select id="storeFilterStore"><option value="">全部门店</option><option>西工店</option><option>洛龙店</option><option>其他</option></select></label>
+              <label>状态<select id="storeFilterStatus"><option value="">全部状态</option><option>待确认</option><option>处理中</option><option>需回访</option><option>已完成</option></select></label>
+              <label>负责人<input id="storeFilterOwner" placeholder="负责人"></label>
+            </div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>门店</th><th>事项</th><th>负责人</th><th>状态</th><th>处理建议</th><th>操作</th></tr></thead>
@@ -1102,7 +1175,13 @@
               <label style="margin-top:12px">复盘<textarea id="contentVideoReview" placeholder="写下标题、封面、发布时间、转化等复盘"></textarea></label>
               <button class="btn" type="submit" style="margin-top:12px">保存内容记录</button>
             </form>
-            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存。</p>
+            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存；手机端点击单元格会弹出编辑框。</p>
+            <div class="filter-bar">
+              <label>关键词<input id="contentFilterKeyword" placeholder="搜索标题/复盘"></label>
+              <label>平台<input id="contentFilterPlatform" placeholder="抖音 / 小红书"></label>
+              <label>播放<input id="contentFilterPlay" placeholder="播放量或状态"></label>
+              <label>互动<input id="contentFilterInteract" placeholder="点赞/收藏"></label>
+            </div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>标题</th><th>平台</th><th>播放</th><th>互动</th><th>复盘</th><th>操作</th></tr></thead>
@@ -1168,11 +1247,45 @@
           </div>
           <div class="card" style="margin-top:16px">
             <h3>工作日报记录</h3>
-            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存。</p>
+            <p class="hint">表格内容可直接点击修改，离开单元格后自动保存；手机端点击单元格会弹出编辑框。</p>
+            <div class="filter-bar">
+              <label>关键词<input id="reportFilterKeyword" placeholder="搜索工作/问题"></label>
+              <label>开始日期<input id="reportFilterStart" type="date"></label>
+              <label>结束日期<input id="reportFilterEnd" type="date"></label>
+              <label>只看遗留问题<select id="reportFilterIssue"><option value="">全部</option><option value="yes">有遗留问题</option></select></label>
+            </div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>日期</th><th>今日工作</th><th>工作安排</th><th>遗留问题</th><th>操作</th></tr></thead>
                 <tbody id="dailyReportsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <section class="section" id="monthly">
+          <div class="grid cols-2">
+            <div class="card">
+              <h3>月度复盘</h3>
+              <p class="hint">根据待办、门店记录、内容记录和工作日报自动汇总，也可以手动补充备注。</p>
+              <div class="form-grid">
+                <label>选择月份<input id="monthlyMonth" type="month"></label>
+                <label>手动备注<input id="monthlyNote" placeholder="例如：本月重点是稳定门店评价"></label>
+              </div>
+              <button class="btn" id="saveMonthlyNote" style="margin-top:12px">保存备注并刷新复盘</button>
+            </div>
+            <div class="card">
+              <h3>本月摘要</h3>
+              <div class="review-box" id="monthlySummary">选择月份后自动生成。</div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <h3>本月明细</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>类型</th><th>数量</th><th>重点</th></tr></thead>
+                <tbody id="monthlyRows"></tbody>
               </table>
             </div>
           </div>
@@ -1188,11 +1301,14 @@
                   <label>所属模块<select id="taskModule"><option>门店运营</option><option>人员管理</option><option>青旅拓店</option><option>内容视频</option><option>代运营</option></select></label>
                   <label>负责人<input id="taskOwner" placeholder="例如：西工店店长"></label>
                   <label>优先级<select id="taskPriority"><option>普通</option><option>跟进</option><option>紧急</option></select></label>
+                  <label>截止日期<input id="taskDue" type="date"></label>
                 </div>
                 <label style="margin-top:12px">备注<textarea id="taskNote" placeholder="写下处理标准、截止时间或注意事项"></textarea></label>
                 <div style="margin-top:12px;display:flex;gap:10px;">
                   <button type="submit" class="btn">保存待办</button>
                   <button type="button" class="btn secondary" id="exportData">导出数据</button>
+                  <button type="button" class="btn secondary" id="importDataBtn">导入数据</button>
+                  <input id="importDataFile" type="file" accept="application/json" style="display:none">
                 </div>
               </form>
             </div>
@@ -1204,6 +1320,23 @@
                 <div class="task"><span class="tag warn">提示</span><span><b class="task-title">清除浏览器缓存会重置数据</b><span class="task-meta">建议定期导出备份重要记录</span></span><span></span></div>
               </div>
             </div>
+          </div>
+
+          <div class="card" id="cloudSyncCard" style="margin-top:16px">
+            <h3>云端同步</h3>
+            <p class="hint">可选功能：使用 GitHub 保存/恢复数据。注意：如果同步到公开仓库，数据文件也可能公开，重要隐私不要写进去。</p>
+            <div class="form-grid">
+              <label>GitHub Token<input id="cloudToken" type="password" placeholder="ghp_...，只保存在当前浏览器"></label>
+              <label>仓库所有者<input id="cloudOwner" placeholder="lfe-lll"></label>
+              <label>仓库名<input id="cloudRepo" placeholder="jiudian-qinglv-workbench"></label>
+              <label>数据文件路径<input id="cloudPath" placeholder="cloud-data.json"></label>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn" id="saveCloudConfig">保存同步设置</button>
+              <button type="button" class="btn secondary" id="uploadCloudData">上传到云端</button>
+              <button type="button" class="btn secondary" id="downloadCloudData">从云端恢复</button>
+            </div>
+            <div class="cloud-status" id="cloudStatus">未配置云同步。</div>
           </div>
         </section>
       </div>
@@ -1236,13 +1369,25 @@
     </div>
   </nav>
 
+
+  <div class="modal-mask" id="editModalMask">
+    <div class="edit-modal">
+      <h3>编辑内容</h3>
+      <textarea id="editModalText"></textarea>
+      <div class="modal-actions">
+        <button class="btn secondary" type="button" id="editModalCancel">取消</button>
+        <button class="btn" type="button" id="editModalSave">保存</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast">已保存</div>
   <script src="./_shared/js/echarts.min.js"></script>
   <script src="assets/charts.js"></script>
   <script>
     // 注册 Service Worker（支持离线访问）
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js?v=4').then(function(reg) { if (reg && reg.update) reg.update(); }).catch(function() {
+      navigator.serviceWorker.register('./sw.js?v=6').then(function(reg) { if (reg && reg.update) reg.update(); }).catch(function() {
         // 本地文件模式下可能注册失败，静默处理
       });
     }
