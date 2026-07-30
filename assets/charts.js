@@ -200,7 +200,7 @@
   function chartBaseOptions() {
     return {
       animation: false,
-      textStyle: { color: ink, fontFamily: 'Instrument Sans, Microsoft YaHei, sans-serif' },
+      textStyle: { color: ink, fontFamily: 'Microsoft YaHei, PingFang SC, Hiragino Sans GB, sans-serif' },
       tooltip: {
         trigger: 'axis',
         appendToBody: true,
@@ -333,7 +333,7 @@
     var chart = echarts.init(el, null, { renderer: 'svg' });
     chart.setOption({
       animation: false,
-      textStyle: { color: ink, fontFamily: 'Instrument Sans, Microsoft YaHei, sans-serif' },
+      textStyle: { color: ink, fontFamily: 'Microsoft YaHei, PingFang SC, Hiragino Sans GB, sans-serif' },
       tooltip: {
         trigger: 'axis',
         appendToBody: true,
