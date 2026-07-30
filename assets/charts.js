@@ -53,10 +53,10 @@
   function getDefaultData() {
     return {
       tasks: [
-        { id: 1, title: '回复洛龙店一条差评', meta: '客户体验 / 需今天处理', tag: '紧急', tagClass: 'bad', done: false },
-        { id: 2, title: '确认西工店维修进度', meta: '空调异响 / 负责人：店长', tag: '跟进', tagClass: 'warn', done: false },
-        { id: 3, title: '收集保洁主管晚班检查表', meta: '卫生标准 / 21:00 前', tag: '日常', tagClass: '', done: false },
-        { id: 4, title: '整理青旅备选房源对比', meta: '拓店项目 / 本周复盘', tag: '项目', tagClass: '', done: false }
+        { id: 1, title: '回复洛龙店一条差评', meta: '客户体验 / 需今天处理', tag: '紧急', tagClass: 'bad', due: new Date().toISOString().slice(0, 10), done: false },
+        { id: 2, title: '确认西工店维修进度', meta: '空调异响 / 负责人：店长', tag: '跟进', tagClass: 'warn', due: new Date().toISOString().slice(0, 10), done: false },
+        { id: 3, title: '收集保洁主管晚班检查表', meta: '卫生标准 / 21:00 前', tag: '日常', tagClass: '', due: '', done: false },
+        { id: 4, title: '整理青旅备选房源对比', meta: '拓店项目 / 本周复盘', tag: '项目', tagClass: '', due: '', done: false }
       ],
       alerts: [
         { tag: '客诉', tagClass: 'bad', title: '洛龙店 301 房卫生反馈', meta: '建议核查保洁流程并回访客户' },
@@ -85,7 +85,8 @@
       ],
       dailyReports: [
         { date: new Date().toISOString().slice(0, 10), work: '查看入住率、跟进门店异常、整理今日待办。', plan: '继续跟进客诉和内容拍摄计划。', issue: '暂无' }
-      ]
+      ],
+      monthlyNotes: {}
     };
   }
 
@@ -126,18 +127,25 @@
   }
 
   // ===== 待办任务（支持增删改） =====
+  function isOverdue(task) {
+    var today = new Date().toISOString().slice(0, 10);
+    return task.due && !task.done && task.due < today;
+  }
+
   function renderTasks() {
     var container = $('#taskList');
     if (!container) return;
     container.innerHTML = appData.tasks.map(function(t) {
-      return '<label class="task' + (t.done ? ' done' : '') + '">' +
+      var dueText = t.due ? '<span class="due">截止：' + escapeHtml(t.due) + (isOverdue(t) ? '（已逾期）' : '') + '</span>' : '';
+      return '<label class="task' + (t.done ? ' done' : '') + (isOverdue(t) ? ' overdue' : '') + '">' +
         '<input type="checkbox" data-id="' + t.id + '"' + (t.done ? ' checked' : '') + '>' +
-        '<span><b class="task-title">' + escapeHtml(t.title) + '</b><span class="task-meta">' + escapeHtml(t.meta) + '</span></span>' +
-        '<span class="tag ' + t.tagClass + '">' + escapeHtml(t.tag) + '</span>' +
+        '<span><b class="task-title">' + escapeHtml(t.title) + '</b><span class="task-meta">' + escapeHtml(t.meta) + '</span>' + dueText + '</span>' +
+        '<span class="tag ' + t.tagClass + '">' + escapeHtml(isOverdue(t) ? '逾期' : t.tag) + '</span>' +
       '</label>';
     }).join('');
     bindTaskEvents();
     updateTaskCount();
+    renderMonthlyReview();
   }
 
   function bindTaskEvents() {
@@ -173,6 +181,7 @@
       var owner = $('#taskOwner').value.trim();
       var priority = $('#taskPriority').value;
       var note = $('#taskNote').value.trim();
+      var due = $('#taskDue') ? $('#taskDue').value : '';
       if (!title) {
         showToast('请输入事项名称');
         return;
@@ -184,6 +193,7 @@
         meta: (owner ? owner + ' / ' : '') + module + (note ? ' / ' + note : ''),
         tag: priority,
         tagClass: tagMap[priority] || '',
+        due: due,
         done: false
       };
       appData.tasks.push(newTask);
@@ -405,6 +415,11 @@
   function migrateData() {
     var defaults = getDefaultData();
     if (!appData.storeKpis) appData.storeKpis = defaults.storeKpis;
+    appData.tasks = (appData.tasks || defaults.tasks).map(function(t) {
+      if (typeof t.due === 'undefined') t.due = '';
+      return t;
+    });
+    if (!appData.monthlyNotes) appData.monthlyNotes = {};
     appData.dailyReports = (appData.dailyReports || defaults.dailyReports).map(function(r) {
       return {
         date: r.date || new Date().toISOString().slice(0, 10),
@@ -447,7 +462,19 @@
   function renderStoreRecords() {
     var tbody = $('#storeRecordsBody');
     if (!tbody) return;
+    var keyword = ($('#storeFilterKeyword') && $('#storeFilterKeyword').value.trim()) || '';
+    var store = ($('#storeFilterStore') && $('#storeFilterStore').value) || '';
+    var status = ($('#storeFilterStatus') && $('#storeFilterStatus').value) || '';
+    var owner = ($('#storeFilterOwner') && $('#storeFilterOwner').value.trim()) || '';
     tbody.innerHTML = appData.storeRecords.map(function(r, index) {
+      return { row: r, index: index };
+    }).filter(function(item) {
+      var r = item.row;
+      var text = [r.store, r.item, r.owner, r.status, r.advice].join(' ');
+      return (!keyword || text.indexOf(keyword) >= 0) && (!store || r.store === store) && (!status || r.status === status) && (!owner || (r.owner || '').indexOf(owner) >= 0);
+    }).map(function(item) {
+      var r = item.row;
+      var index = item.index;
       return '<tr>' +
         editableCell('storeRecords', index, 'store', r.store) +
         editableCell('storeRecords', index, 'item', r.item) +
@@ -463,7 +490,19 @@
   function renderContentVideos() {
     var tbody = $('#contentVideosBody');
     if (!tbody) return;
+    var keyword = ($('#contentFilterKeyword') && $('#contentFilterKeyword').value.trim()) || '';
+    var platform = ($('#contentFilterPlatform') && $('#contentFilterPlatform').value.trim()) || '';
+    var play = ($('#contentFilterPlay') && $('#contentFilterPlay').value.trim()) || '';
+    var interact = ($('#contentFilterInteract') && $('#contentFilterInteract').value.trim()) || '';
     tbody.innerHTML = appData.contentVideos.map(function(v, index) {
+      return { row: v, index: index };
+    }).filter(function(item) {
+      var v = item.row;
+      var text = [v.title, v.platform, v.play, v.interact, v.review].join(' ');
+      return (!keyword || text.indexOf(keyword) >= 0) && (!platform || (v.platform || '').indexOf(platform) >= 0) && (!play || (v.play || '').indexOf(play) >= 0) && (!interact || (v.interact || '').indexOf(interact) >= 0);
+    }).map(function(item) {
+      var v = item.row;
+      var index = item.index;
       return '<tr>' +
         editableCell('contentVideos', index, 'title', v.title) +
         editableCell('contentVideos', index, 'platform', v.platform) +
@@ -480,7 +519,20 @@
     var tbody = $('#dailyReportsBody');
     if (!tbody) return;
     appData.dailyReports = appData.dailyReports || [];
+    var keyword = ($('#reportFilterKeyword') && $('#reportFilterKeyword').value.trim()) || '';
+    var start = ($('#reportFilterStart') && $('#reportFilterStart').value) || '';
+    var end = ($('#reportFilterEnd') && $('#reportFilterEnd').value) || '';
+    var onlyIssue = ($('#reportFilterIssue') && $('#reportFilterIssue').value) || '';
     tbody.innerHTML = appData.dailyReports.map(function(r, index) {
+      return { row: r, index: index };
+    }).filter(function(item) {
+      var r = item.row;
+      var text = [r.date, r.work, r.plan, r.issue].join(' ');
+      var hasIssue = r.issue && r.issue !== '暂无' && r.issue !== '无';
+      return (!keyword || text.indexOf(keyword) >= 0) && (!start || r.date >= start) && (!end || r.date <= end) && (!onlyIssue || hasIssue);
+    }).map(function(item) {
+      var r = item.row;
+      var index = item.index;
       return '<tr>' +
         editableCell('dailyReports', index, 'date', r.date) +
         editableCell('dailyReports', index, 'work', r.work || r.done || r.focus) +
@@ -511,6 +563,7 @@
           renderStoreCards();
         }
         saveData(appData);
+        renderMonthlyReview();
         showToast('已自动保存');
       }
     }, true);
@@ -553,6 +606,7 @@
         });
         saveData(appData);
         renderStoreRecords();
+        renderMonthlyReview();
         storeForm.reset();
         showToast('门店记录已保存');
       });
@@ -573,6 +627,7 @@
         });
         saveData(appData);
         renderContentVideos();
+        renderMonthlyReview();
         contentForm.reset();
         showToast('内容记录已保存');
       });
@@ -593,6 +648,7 @@
         });
         saveData(appData);
         renderDailyReports();
+        renderMonthlyReview();
         reportForm.reset();
         if (reportDate) reportDate.value = new Date().toISOString().slice(0, 10);
         showToast('工作日报已保存');
@@ -639,6 +695,264 @@
     });
   }
 
+
+  function bindFilters() {
+    ['storeFilterKeyword','storeFilterStore','storeFilterStatus','storeFilterOwner'].forEach(function(id) {
+      var el = $('#' + id);
+      if (el) el.addEventListener('input', renderStoreRecords);
+      if (el) el.addEventListener('change', renderStoreRecords);
+    });
+    ['contentFilterKeyword','contentFilterPlatform','contentFilterPlay','contentFilterInteract'].forEach(function(id) {
+      var el = $('#' + id);
+      if (el) el.addEventListener('input', renderContentVideos);
+    });
+    ['reportFilterKeyword','reportFilterStart','reportFilterEnd','reportFilterIssue'].forEach(function(id) {
+      var el = $('#' + id);
+      if (el) el.addEventListener('input', renderDailyReports);
+      if (el) el.addEventListener('change', renderDailyReports);
+    });
+  }
+
+  function initImport() {
+    var btn = $('#importDataBtn');
+    var file = $('#importDataFile');
+    if (!btn || !file) return;
+    btn.addEventListener('click', function() { file.click(); });
+    file.addEventListener('change', function() {
+      var selected = file.files && file.files[0];
+      if (!selected) return;
+      var reader = new FileReader();
+      reader.onload = function() {
+        try {
+          var imported = JSON.parse(reader.result);
+          if (!imported || typeof imported !== 'object') throw new Error('数据格式不正确');
+          appData = imported;
+          migrateData();
+          renderTasks();
+          renderAllEditable();
+          renderAgencyClients();
+          renderMonthlyReview();
+          showToast('数据已导入');
+        } catch (err) {
+          showToast('导入失败：文件格式不正确');
+        }
+      };
+      reader.readAsText(selected, 'utf-8');
+      file.value = '';
+    });
+  }
+
+  function initEditModal() {
+    var mask = $('#editModalMask');
+    var text = $('#editModalText');
+    var save = $('#editModalSave');
+    var cancel = $('#editModalCancel');
+    var current = null;
+    if (!mask || !text || !save || !cancel) return;
+
+    document.addEventListener('click', function(e) {
+      var cell = e.target.closest('[contenteditable="true"][data-list]');
+      if (!cell || window.innerWidth > 760) return;
+      e.preventDefault();
+      current = cell;
+      text.value = cell.textContent.trim();
+      mask.classList.add('show');
+      setTimeout(function() { text.focus(); }, 80);
+    }, true);
+
+    function close() {
+      mask.classList.remove('show');
+      current = null;
+    }
+
+    cancel.addEventListener('click', close);
+    mask.addEventListener('click', function(e) {
+      if (e.target === mask) close();
+    });
+    save.addEventListener('click', function() {
+      if (!current) return close();
+      var list = current.getAttribute('data-list');
+      var index = parseInt(current.getAttribute('data-index'), 10);
+      var field = current.getAttribute('data-field');
+      if (appData[list] && appData[list][index]) {
+        appData[list][index][field] = text.value.trim();
+        if (list === 'storeRecords' && field === 'status') appData[list][index].statusClass = statusClass(appData[list][index][field]);
+        if (list === 'storeKpis' && field === 'status') appData[list][index].statusClass = statusClass(appData[list][index][field]);
+        saveData(appData);
+        renderAllEditable();
+        renderMonthlyReview();
+        showToast('已保存');
+      }
+      close();
+    });
+  }
+
+  function monthOf(dateText) {
+    return (dateText || '').slice(0, 7);
+  }
+
+  function renderMonthlyReview() {
+    var monthInput = $('#monthlyMonth');
+    var summary = $('#monthlySummary');
+    var rows = $('#monthlyRows');
+    if (!monthInput || !summary || !rows) return;
+    if (!monthInput.value) monthInput.value = new Date().toISOString().slice(0, 7);
+    var m = monthInput.value;
+    var reports = (appData.dailyReports || []).filter(function(r) { return monthOf(r.date) === m; });
+    var storeOpen = (appData.storeRecords || []).filter(function(r) { return r.status !== '已完成'; });
+    var contentCount = (appData.contentVideos || []).length;
+    var tasks = appData.tasks || [];
+    var undone = tasks.filter(function(t) { return !t.done; });
+    var overdue = tasks.filter(isOverdue);
+    var issueReports = reports.filter(function(r) { return r.issue && r.issue !== '暂无' && r.issue !== '无'; });
+    var note = (appData.monthlyNotes && appData.monthlyNotes[m]) || '';
+    var topIssues = issueReports.slice(0, 3).map(function(r) { return r.issue; }).join('；') || '暂无集中遗留问题';
+    summary.textContent =
+      '月份：' + m + '\n' +
+      '日报数量：' + reports.length + ' 条\n' +
+      '未完成待办：' + undone.length + ' 项，其中逾期 ' + overdue.length + ' 项\n' +
+      '门店未闭环事项：' + storeOpen.length + ' 项\n' +
+      '内容记录：' + contentCount + ' 条\n' +
+      '主要遗留问题：' + topIssues + '\n' +
+      '手动备注：' + (note || '暂无');
+    rows.innerHTML = [
+      ['工作日报', reports.length, reports.slice(0, 2).map(function(r) { return r.work; }).join('；') || '暂无'],
+      ['遗留问题', issueReports.length, topIssues],
+      ['未完成待办', undone.length, undone.slice(0, 3).map(function(t) { return t.title; }).join('；') || '暂无'],
+      ['逾期待办', overdue.length, overdue.slice(0, 3).map(function(t) { return t.title; }).join('；') || '暂无'],
+      ['门店事项', storeOpen.length, storeOpen.slice(0, 3).map(function(r) { return r.store + '：' + r.item; }).join('；') || '暂无'],
+      ['内容记录', contentCount, (appData.contentVideos || []).slice(0, 3).map(function(v) { return v.title; }).join('；') || '暂无']
+    ].map(function(row) {
+      return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td></tr>';
+    }).join('');
+  }
+
+  function initMonthlyReview() {
+    var monthInput = $('#monthlyMonth');
+    var note = $('#monthlyNote');
+    var save = $('#saveMonthlyNote');
+    if (!monthInput || !note || !save) return;
+    monthInput.value = new Date().toISOString().slice(0, 7);
+    monthInput.addEventListener('change', function() {
+      note.value = (appData.monthlyNotes && appData.monthlyNotes[monthInput.value]) || '';
+      renderMonthlyReview();
+    });
+    save.addEventListener('click', function() {
+      appData.monthlyNotes = appData.monthlyNotes || {};
+      appData.monthlyNotes[monthInput.value] = note.value.trim();
+      saveData(appData);
+      renderMonthlyReview();
+      showToast('月度备注已保存');
+    });
+    renderMonthlyReview();
+  }
+
+  function utf8ToBase64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  function base64ToUtf8(str) {
+    return decodeURIComponent(escape(atob(str)));
+  }
+
+  function getCloudConfig() {
+    return {
+      token: ($('#cloudToken') && $('#cloudToken').value.trim()) || '',
+      owner: ($('#cloudOwner') && $('#cloudOwner').value.trim()) || 'lfe-lll',
+      repo: ($('#cloudRepo') && $('#cloudRepo').value.trim()) || 'jiudian-qinglv-workbench',
+      path: ($('#cloudPath') && $('#cloudPath').value.trim()) || 'cloud-data.json'
+    };
+  }
+
+  function setCloudStatus(message) {
+    var el = $('#cloudStatus');
+    if (el) el.textContent = message;
+    showToast(message);
+  }
+
+  function initCloudSync() {
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem('hotel_workbench_cloud_config') || '{}'); } catch (e) {}
+    ['cloudToken','cloudOwner','cloudRepo','cloudPath'].forEach(function(id) {
+      var el = $('#' + id);
+      if (!el) return;
+      var key = id.replace('cloud', '').toLowerCase();
+      if (saved[key]) el.value = saved[key];
+    });
+    if ($('#cloudOwner') && !$('#cloudOwner').value) $('#cloudOwner').value = 'lfe-lll';
+    if ($('#cloudRepo') && !$('#cloudRepo').value) $('#cloudRepo').value = 'jiudian-qinglv-workbench';
+    if ($('#cloudPath') && !$('#cloudPath').value) $('#cloudPath').value = 'cloud-data.json';
+
+    var saveBtn = $('#saveCloudConfig');
+    var uploadBtn = $('#uploadCloudData');
+    var downloadBtn = $('#downloadCloudData');
+    if (saveBtn) saveBtn.addEventListener('click', function() {
+      localStorage.setItem('hotel_workbench_cloud_config', JSON.stringify(getCloudConfig()));
+      setCloudStatus('云同步设置已保存');
+    });
+    if (uploadBtn) uploadBtn.addEventListener('click', uploadCloudData);
+    if (downloadBtn) downloadBtn.addEventListener('click', downloadCloudData);
+  }
+
+  function githubHeaders(token) {
+    return { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' };
+  }
+
+  function getCloudUrl(cfg) {
+    return 'https://api.github.com/repos/' + encodeURIComponent(cfg.owner) + '/' + encodeURIComponent(cfg.repo) + '/contents/' + cfg.path.replace(/^\/+/, '');
+  }
+
+  function uploadCloudData() {
+    var cfg = getCloudConfig();
+    if (!cfg.token) return setCloudStatus('请先填写 GitHub Token');
+    setCloudStatus('正在上传云端数据...');
+    fetch(getCloudUrl(cfg), { headers: githubHeaders(cfg.token) }).then(function(res) {
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error('读取云端文件失败');
+      return res.json();
+    }).then(function(info) {
+      var body = {
+        message: '同步工作台数据',
+        content: utf8ToBase64(JSON.stringify(appData, null, 2)),
+        branch: 'main'
+      };
+      if (info && info.sha) body.sha = info.sha;
+      return fetch(getCloudUrl(cfg), {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, githubHeaders(cfg.token)),
+        body: JSON.stringify(body)
+      });
+    }).then(function(res) {
+      if (!res.ok) throw new Error('上传失败');
+      localStorage.setItem('hotel_workbench_cloud_config', JSON.stringify(cfg));
+      setCloudStatus('已上传到云端');
+    }).catch(function(err) {
+      setCloudStatus('云同步失败：' + err.message);
+    });
+  }
+
+  function downloadCloudData() {
+    var cfg = getCloudConfig();
+    if (!cfg.token) return setCloudStatus('请先填写 GitHub Token');
+    if (!confirm('将用云端数据覆盖当前浏览器数据，确定继续吗？')) return;
+    setCloudStatus('正在从云端恢复...');
+    fetch(getCloudUrl(cfg), { headers: githubHeaders(cfg.token) }).then(function(res) {
+      if (!res.ok) throw new Error('未找到云端数据文件');
+      return res.json();
+    }).then(function(info) {
+      appData = JSON.parse(base64ToUtf8(info.content.replace(/\n/g, '')));
+      migrateData();
+      renderTasks();
+      renderAllEditable();
+      renderAgencyClients();
+      renderMonthlyReview();
+      localStorage.setItem('hotel_workbench_cloud_config', JSON.stringify(cfg));
+      setCloudStatus('已从云端恢复');
+    }).catch(function(err) {
+      setCloudStatus('云端恢复失败：' + err.message);
+    });
+  }
+
   // ===== 初始化所有功能 =====
   initNavigation();
   initDate();
@@ -653,6 +967,11 @@
   bindEditableTables();
   initRecordForms();
   initExport();
+  initImport();
+  bindFilters();
+  initEditModal();
+  initMonthlyReview();
+  initCloudSync();
   initRevenueChart();
   initTaskChart();
   initPeopleChart();
