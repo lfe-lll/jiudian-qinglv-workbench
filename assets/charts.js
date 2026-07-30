@@ -86,6 +86,9 @@
       dailyReports: [
         { date: new Date().toISOString().slice(0, 10), work: '查看入住率、跟进门店异常、整理今日待办。', plan: '继续跟进客诉和内容拍摄计划。', issue: '暂无' }
       ],
+      learningRecords: [
+        { date: new Date().toISOString().slice(0, 10), content: '学习酒店经营数据复盘方法。', book: '本月待读书', note: '把学到的方法用到门店日报和月度复盘里。' }
+      ],
       monthlyNotes: {}
     };
   }
@@ -420,6 +423,7 @@
       return t;
     });
     if (!appData.monthlyNotes) appData.monthlyNotes = {};
+    if (!appData.learningRecords) appData.learningRecords = defaults.learningRecords;
     appData.dailyReports = (appData.dailyReports || defaults.dailyReports).map(function(r) {
       return {
         date: r.date || new Date().toISOString().slice(0, 10),
@@ -586,6 +590,7 @@
     renderStoreRecords();
     renderContentVideos();
     renderDailyReports();
+    renderLearningRecords();
   }
 
   function initRecordForms() {
@@ -696,6 +701,94 @@
   }
 
 
+
+  function renderLearningRecords() {
+    var tbody = $('#learningRecordsBody');
+    if (!tbody) return;
+    appData.learningRecords = appData.learningRecords || [];
+    var keyword = ($('#learningFilterKeyword') && $('#learningFilterKeyword').value.trim()) || '';
+    var month = ($('#learningFilterMonth') && $('#learningFilterMonth').value) || '';
+    var book = ($('#learningFilterBook') && $('#learningFilterBook').value.trim()) || '';
+    var onlyNote = ($('#learningFilterNote') && $('#learningFilterNote').value) || '';
+    tbody.innerHTML = appData.learningRecords.map(function(r, index) {
+      return { row: r, index: index };
+    }).filter(function(item) {
+      var r = item.row;
+      var text = [r.date, r.content, r.book, r.note].join(' ');
+      var hasNote = r.note && r.note !== '暂无' && r.note !== '无';
+      return (!keyword || text.indexOf(keyword) >= 0) && (!month || (r.date || '').slice(0, 7) === month) && (!book || (r.book || '').indexOf(book) >= 0) && (!onlyNote || hasNote);
+    }).map(function(item) {
+      var r = item.row;
+      var index = item.index;
+      return '<tr>' +
+        editableCell('learningRecords', index, 'date', r.date) +
+        editableCell('learningRecords', index, 'content', r.content) +
+        editableCell('learningRecords', index, 'book', r.book) +
+        editableCell('learningRecords', index, 'note', r.note) +
+        '<td class="table-actions"><button class="mini-btn danger" data-delete-list="learningRecords" data-delete-index="' + index + '">删除</button></td>' +
+      '</tr>';
+    }).join('');
+    renderLearningSummary();
+  }
+
+  function renderLearningSummary() {
+    var target = $('#learningSummary');
+    if (!target) return;
+    var records = appData.learningRecords || [];
+    var currentMonth = new Date().toISOString().slice(0, 7);
+    var monthInput = $('#learningFilterMonth');
+    var month = monthInput && monthInput.value ? monthInput.value : currentMonth;
+    var monthRecords = records.filter(function(r) { return (r.date || '').slice(0, 7) === month; });
+    var books = [];
+    monthRecords.forEach(function(r) {
+      if (r.book && books.indexOf(r.book) < 0) books.push(r.book);
+    });
+    var latest = monthRecords.slice(0, 3).map(function(r) { return r.content; }).join('；') || '暂无学习记录';
+    target.textContent =
+      '月份：' + month + '\n' +
+      '学习记录：' + monthRecords.length + ' 条\n' +
+      '本月读的书：' + (books.join('、') || '暂无') + '\n' +
+      '最近学习：' + latest;
+  }
+
+  function initLearningForm() {
+    var date = $('#learningDate');
+    if (date && !date.value) date.value = new Date().toISOString().slice(0, 10);
+    var monthFilter = $('#learningFilterMonth');
+    if (monthFilter && !monthFilter.value) monthFilter.value = new Date().toISOString().slice(0, 7);
+    var form = $('#addLearningForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var content = $('#learningContent').value.trim();
+        var book = $('#learningBook').value.trim();
+        var note = $('#learningNote').value.trim();
+        if (!content && !book) return showToast('请填写今日学习内容或本月读的书');
+        appData.learningRecords = appData.learningRecords || [];
+        appData.learningRecords.unshift({
+          date: $('#learningDate').value || new Date().toISOString().slice(0, 10),
+          content: content,
+          book: book,
+          note: note
+        });
+        saveData(appData);
+        renderLearningRecords();
+        renderMonthlyReview();
+        form.reset();
+        if (date) date.value = new Date().toISOString().slice(0, 10);
+        showToast('学习记录已保存');
+      });
+    }
+  }
+
+  function bindLearningFilters() {
+    ['learningFilterKeyword','learningFilterMonth','learningFilterBook','learningFilterNote'].forEach(function(id) {
+      var el = $('#' + id);
+      if (el) el.addEventListener('input', renderLearningRecords);
+      if (el) el.addEventListener('change', renderLearningRecords);
+    });
+  }
+
   function bindFilters() {
     ['storeFilterKeyword','storeFilterStore','storeFilterStatus','storeFilterOwner'].forEach(function(id) {
       var el = $('#' + id);
@@ -801,6 +894,11 @@
     var reports = (appData.dailyReports || []).filter(function(r) { return monthOf(r.date) === m; });
     var storeOpen = (appData.storeRecords || []).filter(function(r) { return r.status !== '已完成'; });
     var contentCount = (appData.contentVideos || []).length;
+    var learningCount = (appData.learningRecords || []).filter(function(r) { return monthOf(r.date) === m; }).length;
+    var learningBooks = [];
+    (appData.learningRecords || []).forEach(function(r) {
+      if (monthOf(r.date) === m && r.book && learningBooks.indexOf(r.book) < 0) learningBooks.push(r.book);
+    });
     var tasks = appData.tasks || [];
     var undone = tasks.filter(function(t) { return !t.done; });
     var overdue = tasks.filter(isOverdue);
@@ -813,6 +911,8 @@
       '未完成待办：' + undone.length + ' 项，其中逾期 ' + overdue.length + ' 项\n' +
       '门店未闭环事项：' + storeOpen.length + ' 项\n' +
       '内容记录：' + contentCount + ' 条\n' +
+      '学习记录：' + learningCount + ' 条\n' +
+      '本月读书：' + (learningBooks.join('、') || '暂无') + '\n' +
       '主要遗留问题：' + topIssues + '\n' +
       '手动备注：' + (note || '暂无');
     rows.innerHTML = [
@@ -821,7 +921,8 @@
       ['未完成待办', undone.length, undone.slice(0, 3).map(function(t) { return t.title; }).join('；') || '暂无'],
       ['逾期待办', overdue.length, overdue.slice(0, 3).map(function(t) { return t.title; }).join('；') || '暂无'],
       ['门店事项', storeOpen.length, storeOpen.slice(0, 3).map(function(r) { return r.store + '：' + r.item; }).join('；') || '暂无'],
-      ['内容记录', contentCount, (appData.contentVideos || []).slice(0, 3).map(function(v) { return v.title; }).join('；') || '暂无']
+      ['内容记录', contentCount, (appData.contentVideos || []).slice(0, 3).map(function(v) { return v.title; }).join('；') || '暂无'],
+      ['学习记录', learningCount, learningBooks.join('、') || '暂无']
     ].map(function(row) {
       return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td><td>' + escapeHtml(row[2]) + '</td></tr>';
     }).join('');
@@ -963,12 +1064,15 @@
   renderStoreRecords();
   renderContentVideos();
   renderDailyReports();
+  renderLearningRecords();
   renderAgencyClients();
   bindEditableTables();
   initRecordForms();
   initExport();
   initImport();
   bindFilters();
+  initLearningForm();
+  bindLearningFilters();
   initEditModal();
   initMonthlyReview();
   initCloudSync();
